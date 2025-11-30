@@ -7,6 +7,7 @@ import List from "./pages/List";
 import Orders from "./pages/Orders";
 import { ToastContainer } from 'react-toastify';
 import Login from "./components/Login";
+import Tag from "./pages/Tag";
 
 const App = () => {
   const { loading, user } = useAuth();
@@ -30,6 +31,7 @@ const App = () => {
                     <Route path="/add" element={<Add />} />
                     <Route path="/list" element={<List />} />
                     <Route path="/orders" element={<Orders />} />
+                    <Route path="/tag" element={<Tag />} />
                   </Routes>
                 </div>
               </div>

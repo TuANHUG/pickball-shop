@@ -4,11 +4,7 @@ import cookieParser from 'cookie-parser';
 import 'dotenv/config';
 import connectDB from './config/mongodb.js';
 import connectCloudinary from './config/cloudinary.js';
-import userRouter from './routes/userRoute.js';
-import productRouter from './routes/productRoute.js';
-import adminRouter from './routes/adminRoute.js';
-import cartRoute from './routes/cartRoute.js';
-import orderRoute from './routes/orderRoute.js';
+import route from './routes/index.route.js';
 
 // App Config
 const app = express();
@@ -25,11 +21,7 @@ connectDB();
 connectCloudinary();
 
 // API endpoints
-app.use('/api/user', userRouter);
-app.use('/api/product', productRouter);
-app.use('/api/admin', adminRouter);
-app.use('/api/cart/', cartRoute);
-app.use('/api/order', orderRoute);
+route(app);
 
 app.listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);

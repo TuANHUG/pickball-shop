@@ -27,6 +27,16 @@ const Sidebar = () => {
                         </div>
                     )}
                 </NavLink>
+                {/* List Tags */}
+                <NavLink to="/tag">
+                    {({ isActive }) => (
+                        <div className={`flex items-center gap-3 border border-r-0 px-3 py-2 rounded-l 
+                            ${isActive ? "bg-[#ffebf5] border-[#c586a5]" : "border-gray-300"}`}>
+                            <img className="w-5 h-5" src={assets.order_icon} alt="List Items" />
+                            <p className="hidden md:block">List Tags</p>
+                        </div>
+                    )}
+                </NavLink>
 
                 {/* Orders */}
                 <NavLink to="/orders">
