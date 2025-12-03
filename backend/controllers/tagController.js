@@ -60,7 +60,7 @@ export const getAllTags = async (req, res) => {
 // Get tags grouped by tag group
 export const getTagsGrouped = async (req, res) => {
   try {
-    const tagGroups = await TagGroup.find().sort({ createdAt: -1 });
+    const tagGroups = await TagGroup.find().sort({ createdAt: 1 });
     const tags = await Tag.find();
 
     const groupedData = tagGroups.map((group) => {

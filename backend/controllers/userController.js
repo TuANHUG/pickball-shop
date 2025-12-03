@@ -17,19 +17,19 @@ const userLogin = async (req, res) => {
 
         // Input validation
         if (!email || !password) {
-            return res.status(400).json({ success: false, message: "All fields are required" });
+            return res.status(400).json({ success: false, message: "Tất cả các trường là bắt buộc" });
         }
 
         // Check if user exists
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json({ success: false, message: "User doesn't exist" });
+            return res.status(400).json({ success: false, message: "Người dùng không tồn tại" });
         }
 
         // Compare password
         const isMatchedPassword = await bcrypt.compare(password, user.password);
         if (!isMatchedPassword) {
-            return res.status(400).json({ success: false, message: "Invalid credentials" });
+            return res.status(400).json({ success: false, message: "Thông tin đăng nhập không hợp lệ" });
         }
 
         // Issue JWT token
@@ -43,11 +43,11 @@ const userLogin = async (req, res) => {
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         });
 
-        return res.status(200).json({ success: true, user: user._id, message: "Successfully LoggedIn" });
+        return res.status(200).json({ success: true, user: user._id, message: "Đăng nhập thành công" });
 
     } catch (error) {
         console.error("User Login error:", error);
-        return res.status(500).json({ success: false, message: "Something went wrong. Please try again later." });
+        return res.status(500).json({ success: false, message: "Có lỗi xảy ra. Vui lòng thử lại sau." });
     }
 };
 
@@ -59,11 +59,11 @@ const registerUser = async (req, res) => {
 
         // Input validation
         if (!name || !email || !password) {
-            return res.status(400).json({ success: false, message: 'All fields are required' });
+            return res.status(400).json({ success: false, message: 'Tất cả các trường là bắt buộc' });
         }
 
         if (!validator.isEmail(email)) {
-            return res.status(400).json({ success: false, message: 'Please enter a valid email' });
+            return res.status(400).json({ success: false, message: 'Vui lòng nhập email hợp lệ' });
         }
 
         // if (!validator.isStrongPassword(password)) {
@@ -73,7 +73,7 @@ const registerUser = async (req, res) => {
         // Check for existing user
         const exists = await User.findOne({ email });
         if (exists) {
-            return res.status(400).json({ success: false, message: 'User already exists' });
+            return res.status(400).json({ success: false, message: 'Người dùng đã tồn tại' });
         }
 
         // Hash password
@@ -101,22 +101,22 @@ const registerUser = async (req, res) => {
         });
 
 
-        return res.status(200).json({ success: true, user: user._id, message: "Registration Success" });
+        return res.status(200).json({ success: true, user: user._id, message: "Đăng ký thành công" });
 
     } catch (error) {
         console.error("Registration error:", error);
-        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.' });
+        return res.status(500).json({ success: false, message: 'Có lỗi xảy ra. Vui lòng thử lại sau.' });
     }
 };
 
 const getUserData = (req, res) => {
     if (!req.user) {
-        return res.status(401).json({ success: false, message: "Unauthorized" });
+        return res.status(401).json({ success: false, message: "Chưa xác thực" });
     }
 
     return res.status(200).json({
         success: true,
-        message: "User is authenticated",
+        message: "Người dùng đã được xác thực",
         user: { _id: req.user._id, name: req.user.name, email: req.user.email },
     });
 };
@@ -127,7 +127,7 @@ const userLogout = (req, res) => {
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
     });
-    res.status(200).json({ success: true, message: "Logged out successfully" });
+    res.status(200).json({ success: true, message: "Đăng xuất thành công" });
 };
 
 export { userLogin, registerUser, getUserData, userLogout };

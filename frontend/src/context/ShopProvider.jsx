@@ -11,6 +11,7 @@ const ShopProvider = ({ children }) => {
     const [showSearch, setShowSearch] = useState(false);
     const [cartItems, setCartItems] = useState({});
     const [products, setProducts] = useState([]);
+    const [tagGroups, setTagGroups] = useState([]);
     const limit = 10;
     const [nextCursor, setNextCursor] = useState(null);
     const [hasMore, setHasMore] = useState(true);
@@ -59,13 +60,29 @@ const ShopProvider = ({ children }) => {
         }
     }, []);
 
+    // Fetch Tag Groups
+    const fetchTagGroups = useCallback(async () => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/tag/tag-by-group`);
+            if (res.data.success) {
+                setTagGroups(res.data.data);
+            } else {
+                toast.error(res.data.message);
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Đã có lỗi khi tải tags");
+        }
+    }, []);
+
 
     useEffect(() => {
         fetchProducts();
+        fetchTagGroups();
         if (user) {
             userCartData();
         }
-    }, [fetchProducts, user, userCartData]);
+    }, [fetchProducts, fetchTagGroups, user, userCartData]);
 
     const addToCart = useCallback(async (itemId, size) => {
         if (!size) {
@@ -148,6 +165,7 @@ const ShopProvider = ({ children }) => {
 
     const contextValue = useMemo(() => ({
         products,
+        tagGroups,
         currency,
         deliveryFee,
         search,
@@ -162,7 +180,7 @@ const ShopProvider = ({ children }) => {
         navigate,
         backendUrl,
         setCartItems
-    }), [search, showSearch, cartItems, addToCart, getCartCount, updateQuantity, getCartAmount, navigate, products]);
+    }), [search, showSearch, cartItems, addToCart, getCartCount, updateQuantity, getCartAmount, navigate, products, tagGroups]);
 
     return (
         <ShopContext.Provider value={contextValue}>

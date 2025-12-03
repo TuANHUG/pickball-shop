@@ -2,11 +2,11 @@ import User from "../models/userModel.js";
 
 // Utility function for input validation
 const validateCartInput = ({ itemId, size, quantity = null }) => {
-    if (!itemId || typeof itemId !== 'string') return "'itemId' is invalid or missing";
-    if (!size || typeof size !== 'string') return "'size' is invalid or missing";
+    if (!itemId || typeof itemId !== 'string') return "'itemId' không hợp lệ hoặc thiếu";
+    if (!size || typeof size !== 'string') return "'size' không hợp lệ hoặc thiếu";
     if (quantity !== null) {
         if (typeof quantity !== 'number' || quantity < 0 || !Number.isInteger(quantity)) {
-            return "'quantity' must be a non-negative integer";
+            return "'quantity' phải là số nguyên không âm";
         }
     }
     return null;
@@ -29,10 +29,10 @@ const addToCart = async (req, res) => {
         );
 
         if (!updateResult) {
-            return res.status(404).json({ success: false, message: "User not found" });
+            return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" });
         }
 
-        res.status(200).json({ success: true, message: "Added to cart" });
+        res.status(200).json({ success: true, message: "Đã thêm vào giỏ hàng" });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: error.message });
@@ -50,7 +50,7 @@ const updateCart = async (req, res) => {
 
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ success: false, message: "User not found" });
+            return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" });
         }
 
         let updateQuery = {};
@@ -71,7 +71,7 @@ const updateCart = async (req, res) => {
 
         await User.findByIdAndUpdate(userId, updateQuery, { new: true });
 
-        res.status(200).json({ success: true, message: "Cart updated" });
+        res.status(200).json({ success: true, message: "Cập nhật giỏ hàng thành công" });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: error.message });
@@ -85,7 +85,7 @@ const getUserCart = async (req, res) => {
         const userId = req.user._id;
         const userData = await User.findById(userId).lean();
         if (!userData) {
-            return res.status(404).json({ success: false, message: "User not found" });
+            return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" });
         }
 
         const cartData = userData.cartData || {};

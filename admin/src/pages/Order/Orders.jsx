@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { assets } from "../assets/admin_assets/assets.js";
+import { assets } from "../../assets/admin_assets/assets.js";
 
 const Orders = () => {
     const currency = "$";

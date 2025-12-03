@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import CreateTagPopup from '../components/CreateTagPopup';
-import CreateTagGroupPopup from '../components/CreateTagGroupPopup';
+import CreateTagPopup from './components/CreateTagPopup';
+import CreateTagGroupPopup from './components/CreateTagGroupPopup';
 
 const Tag = () => {
     const [tagGroups, setTagGroups] = useState([]);

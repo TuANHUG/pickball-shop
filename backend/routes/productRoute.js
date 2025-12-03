@@ -1,5 +1,5 @@
 import express from 'express';
-import { addProduct, listProducts, removeProduct, singleProduct } from '../controllers/productController.js';
+import { addProduct, listProducts, removeProduct, singleProduct, editProduct } from '../controllers/productController.js';
 import upload from '../middleware/multer.js';
 import multer from 'multer';
 import { verifyAdmin } from '../middleware/authMiddleware.js';
@@ -15,6 +15,16 @@ productRouter.post(
         { name: 'image4', maxCount: 1 }
     ]),
     addProduct
+);
+productRouter.put(
+    '/edit/:id', verifyAdmin ,
+    upload.fields([
+        { name: 'image1', maxCount: 1 },
+        { name: 'image2', maxCount: 1 },
+        { name: 'image3', maxCount: 1 },
+        { name: 'image4', maxCount: 1 }
+    ]),
+    editProduct
 );
 productRouter.get('/list', listProducts);
 productRouter.delete('/remove/:id', verifyAdmin , removeProduct);
