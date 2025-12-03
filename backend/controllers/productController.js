@@ -197,7 +197,7 @@ const listProducts = async (req, res) => {
     const products = await Product.find(query)
       .sort({ _id: -1 }) // Newest first by ObjectId
       .limit(queryLimit)
-      .select("name price image tags")
+      .select("name price description image tags")
       .populate("tags", "name");
 
     if (!products || products.length === 0) {

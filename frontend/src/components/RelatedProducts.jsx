@@ -3,18 +3,27 @@ import { useShop } from '../context/ShopContex';
 import Title from "./Title";
 import ProductItem from "./ProductItem";
 
-const RelatedProducts = ({ category, subcategory }) => {
+const RelatedProducts = ({ tags, currentProductId }) => {
   const { products } = useShop();
   const [related, setRelated] = useState([]);
 
   useEffect(() => {
-    if (products.length) {
-      const filtered = products.filter(item =>
-        item.category === category && item.subcategory === subcategory
-      );
+    if (products.length && tags && tags.length > 0) {
+      // Lấy danh sách ID của tags
+      const tagIds = tags.map(tag => tag._id || tag);
+      
+      // Lọc sản phẩm có chung ít nhất 1 tag và không phải sản phẩm hiện tại
+      const filtered = products.filter(item => {
+        if (item._id === currentProductId) return false;
+        if (!item.tags || item.tags.length === 0) return false;
+        
+        const productTagIds = item.tags.map(tag => tag._id || tag);
+        return productTagIds.some(tagId => tagIds.includes(tagId));
+      });
+      
       setRelated(filtered.slice(0, 5));
     }
-  }, [products, category, subcategory]);
+  }, [products, tags, currentProductId]);
 
   return (
     <div className="my-24">

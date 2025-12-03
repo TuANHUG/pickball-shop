@@ -6,19 +6,39 @@ import RelatedProducts from '../components/RelatedProducts';
 
 function Product() {
     const { productId } = useParams();
-    const { products, currency, addToCart } = useShop();
+    const { products, currency, addToCart, tagGroups } = useShop();
 
     const [productDetails, setProductDetails] = useState(null);
     const [image, setImage] = useState('');
     const [size, setSize] = useState('');
+    const [productSizes, setProductSizes] = useState([]);
 
     useEffect(() => {
         const product = products.find(item => item._id === productId);
         if (product) {
             setProductDetails(product);
             setImage(product.image?.[0]);
+
+            // Get Size tag group
+            const sizeTag = tagGroups.find(group => group.name === "Size");
+            
+            if (sizeTag && product.tags) {
+                // Get size tag IDs from the Size group
+                const sizeTagIds = sizeTag.tags.map(tag => tag._id || tag.id);
+                
+                // Find product tags that are in the Size group
+                const productSizeTags = product.tags.filter(tag => 
+                    sizeTagIds.includes(tag._id || tag.id || tag)
+                );
+                
+                // Extract size names
+                const sizes = productSizeTags.map(tag => tag.name).filter(Boolean);
+                setProductSizes(sizes);
+            } else {
+                setProductSizes([]);
+            }
         }
-    }, [productId, products]);
+    }, [productId, products, tagGroups]);
     
 
     if (!productDetails) return <div>Loading...</div>;
@@ -62,21 +82,23 @@ function Product() {
                     <p className='mt-5 text-3xl font-medium'>{currency}{productDetails.price}</p>
                     <p className='mt-5 text-gray-500 md:w-4/5'>{productDetails.description}</p>
 
-                    {/* Size Selection */}
-                    <div className='flex flex-col gap-4 my-8'>
-                        <p>Select Size</p>
-                        <div className='flex gap-2'>
-                            {productDetails.sizes?.map((item, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => setSize(item)}
-                                    className={`border py-2 px-4 bg-gray-100 cursor-pointer ${item === size ? 'border-orange-500' : 'border-gray-300'}`}
-                                >
-                                    {item}
-                                </button>
-                            ))}
+                    {/* Size Selection - Only show if product has size tags */}
+                    {productSizes.length > 0 && (
+                        <div className='flex flex-col gap-4 my-8'>
+                            <p>Select Size</p>
+                            <div className='flex gap-2'>
+                                {productSizes.map((item, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => setSize(item)}
+                                        className={`border py-2 px-4 bg-gray-100 cursor-pointer ${item === size ? 'border-orange-500' : 'border-gray-300'}`}
+                                    >
+                                        {item}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     <button onClick={() => addToCart(productDetails._id, size)} className='bg-black text-white px-8 py-3 text-sm active:bg-gray-700'>ADD TO CART</button>
 
@@ -94,18 +116,14 @@ function Product() {
             <div className='mt-20'>
                 <div className='flex'>
                     <b className='border border-gray-300 px-5 py-3 text-sm'>Description</b>
-                    <p className='border border-gray-300 px-5 py-3 text-sm'>Review (122)</p>
                 </div>
                 <div className='border border-gray-300 flex flex-col gap-4 p-6 text-sm text-gray-500'>
-                    <p>
-                        An e-commerce website is an online platform that facilitates the buying and selling of products or services over the internet. It serves as a virtual marketplace where businesses and individuals can showcase their products, interact with customers, and conduct transactions without the need for a physical presence. E-commerce websites have gained immense popularity due to their convenience, accessibility, and the global reach they offer.
-                    </p>
                     <p>{productDetails.description}</p>
                 </div>
             </div>
 
             {/* Related Products */}
-            <RelatedProducts category={productDetails.category} subcategory={productDetails.subcategory} />
+            <RelatedProducts tags={productDetails.tags} currentProductId={productDetails._id} />
         </div>
     );
 }
