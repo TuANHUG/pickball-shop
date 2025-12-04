@@ -17,11 +17,11 @@ const Orders = () => {
             if (res.data.success) {
                 setOrders(res.data.orders);
             } else {
-                toast.error(res.data.message || "Failed to fetch orders.");
+                toast.error(res.data.message || "Không thể tải danh sách đơn hàng");
             }
         } catch (error) {
             console.error("Fetch error:", error);
-            toast.error(error.message || "Something went wrong.");
+            toast.error(error.message || "Đã có lỗi xảy ra");
         } finally {
             setLoading(false);
         }
@@ -43,13 +43,39 @@ const Orders = () => {
                         order._id === orderId ? { ...order, status: newStatus } : order
                     )
                 );
-                toast.success("Order status updated successfully.");
+                toast.success("Cập nhật trạng thái đơn hàng thành công");
             } else {
-                toast.error(res.data.message || "Failed to update order status.");
+                toast.error(res.data.message || "Không thể cập nhật trạng thái đơn hàng");
             }
         } catch (error) {
             console.error("Error updating status:", error);
-            toast.error("Something went wrong while updating the order status.");
+            toast.error("Đã có lỗi xảy ra khi cập nhật trạng thái đơn hàng");
+        }
+    };
+
+    // Handle payment status update
+    const paymentHandler = async (orderId, currentPayment) => {
+        try {
+            const res = await axios.put(
+                `${import.meta.env.VITE_BACKEND_URL}/api/order/payment`,
+                { orderId, payment: !currentPayment },
+                { withCredentials: true }
+            );
+
+            if (res.data.success) {
+                // Update payment status in state
+                setOrders((prev) =>
+                    prev.map((order) =>
+                        order._id === orderId ? { ...order, payment: !currentPayment } : order
+                    )
+                );
+                toast.success("Cập nhật trạng thái thanh toán thành công");
+            } else {
+                toast.error(res.data.message || "Không thể cập nhật trạng thái thanh toán");
+            }
+        } catch (error) {
+            console.error("Error updating payment:", error);
+            toast.error("Đã có lỗi xảy ra khi cập nhật trạng thái thanh toán");
         }
     };
 
@@ -57,12 +83,12 @@ const Orders = () => {
         fetchAllOrders();
     }, []);
 
-    if (loading) return <p className="p-4 text-center text-gray-500">Loading orders...</p>;
-    if (!orders.length) return <p className="p-4 text-center text-gray-500">No orders found.</p>;
+    if (loading) return <p className="p-4 text-center text-gray-500">Đang tải đơn hàng...</p>;
+    if (!orders.length) return <p className="p-4 text-center text-gray-500">Không có đơn hàng nào</p>;
 
     return (
         <div className="p-4">
-            <h3 className="text-xl font-semibold mb-4">Orders</h3>
+            <h3 className="text-xl font-semibold mb-4">Đơn hàng</h3>
             <div>
                 {orders.map((order) => (
                     <article
@@ -75,27 +101,41 @@ const Orders = () => {
                             <div>
                                 {order.items.map((item, index) => (
                                     <p className="p-0.5" key={index}>
-                                        {item.name} x {item.quantity} <span>{item.size}</span>
+                                        {item.name} x {item.quantity}
+                                        {item.size && <span> - Size: {item.size}</span>}
+                                        {item.color && <span> - Color: {item.color}</span>}
                                         {index !== order.items.length - 1 && ","}
                                     </p>
                                 ))}
                             </div>
-                            <p className="mt-3 mb-2 font-medium">{order.userId?.name}</p>
+                            <p className="mt-3 mb-2 font-medium">{order.name}</p>
                             <address className="not-italic">
-                                <p>{order.address.street},</p>
+                                <p>{order.address.street}</p>
                                 <p>
-                                    {order.address.city}, {order.address.zip}, {order.address.state},{" "}
-                                    {order.address.country}
+                                    {order.address.ward && `${order.address.ward}, `}
+                                    {order.address.city}
                                 </p>
                             </address>
                             <p>{order.phone}</p>
                         </div>
 
                         <div>
-                            <p className="text-sm sm:text-base">Items: {order.items.length}</p>
-                            <p className="mt-3">Method: {order.paymentMethod}</p>
-                            <p>Payment: {order.payment ? "Done" : "Pending"}</p>
-                            <p>Date: {new Date(order.createdAt).toLocaleDateString()}</p>
+                            <p className="text-sm sm:text-base">Số lượng: {order.items.length}</p>
+                            <p className="mt-3">Phương thức: {order.paymentMethod === "CashOnDelivery" ? "Thanh toán khi nhận hàng" : order.paymentMethod}</p>
+                            <div className="mt-2 flex items-center gap-2">
+                                <span>Thanh toán:</span>
+                                <button
+                                    onClick={() => paymentHandler(order._id, order.payment)}
+                                    className={`px-3 py-1 rounded text-xs font-semibold ${
+                                        order.payment 
+                                            ? 'bg-green-100 text-green-700 border border-green-300' 
+                                            : 'bg-red-100 text-red-700 border border-red-300'
+                                    }`}
+                                >
+                                    {order.payment ? "Đã thanh toán" : "Chưa thanh toán"}
+                                </button>
+                            </div>
+                            <p>Ngày đặt hàng: {new Date(order.createdAt).toLocaleDateString('vi-VN')}</p>
                         </div>
 
                         <div>
@@ -110,11 +150,11 @@ const Orders = () => {
                                 onChange={(e) => statusHandler(e.target.value, order._id)}
                                 className="p-2 font-semibold border border-gray-300 rounded-md"
                             >
-                                {["Pending", "Processing", "Shipped", "Delivered", "Cancelled"].map((option) => (
-                                    <option key={option} value={option}>
-                                        {option}
-                                    </option>
-                                ))}
+                                <option value="Pending">Chờ xử lý</option>
+                                <option value="Processing">Đang xử lý</option>
+                                <option value="Shipped">Đã gửi hàng</option>
+                                <option value="Delivered">Đã giao hàng</option>
+                                <option value="Cancelled">Đã hủy</option>
                             </select>
                         </div>
                     </article>

@@ -41,7 +41,7 @@ function Orders() {
     return (
         <div className='border-t-2 border-gray-300 pt-16'>
             <div className='text-2xl'>
-                <Title text1='MY' text2='ORDERS' />
+                <Title text1='ĐƠN HÀNG' text2='CỦA TÔI' />
             </div>
             <div>
                 {orderData?.map((product, index) => (
@@ -56,10 +56,11 @@ function Orders() {
                                 <p className='sm:text-base font-medium'>{product.name}</p>
                                 <div className='flex items-center gap-3 mt-1 text-base text-gray-700'>
                                     <p>{currency}{product.price.toFixed(2)}</p>
-                                    <p>Quantity: {product.quantity}</p>
-                                    <p>Size: {product.size}</p>
+                                    <p>Số lượng: {product.quantity}</p>
+                                    {product.size && <p>Size: {product.size}</p>}
+                                    {product.color && <p>Màu: {product.color}</p>}
                                 </div>
-                                <p className='mt-1'>Date: <span className='text-gray-400'>{new Date(product.date).toLocaleDateString()}</span></p>
+                                <p className='mt-1'>Ngày đặt hàng: <span className='text-gray-400'>{new Date(product.date).toLocaleDateString()}</span></p>
                             </div>
                         </div>
                         <div className='flex justify-between md:w-1/2'>
@@ -67,9 +68,7 @@ function Orders() {
                                 <p className='min-w-2 h-2 rounded-full bg-green-500'></p>
                                 <p className='text-sm md:text-base'>{product.status}</p>
                             </div>
-                            <button className='border border-gray-300 px-4 py-2 text-sm font-medium rounded-sm cursor-pointer'>
-                                Track Order
-                            </button>
+
                         </div>
                     </div>
                 ))}

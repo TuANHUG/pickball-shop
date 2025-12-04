@@ -9,7 +9,7 @@ import { useAuth } from "./AuthContext";
 const ShopProvider = ({ children }) => {
     const [search, setSearch] = useState('');
     const [showSearch, setShowSearch] = useState(false);
-    const [cartItems, setCartItems] = useState({});
+    const [cartItems, setCartItems] = useState([]);
     const [products, setProducts] = useState([]);
     const [tagGroups, setTagGroups] = useState([]);
     const limit = 10;
@@ -21,7 +21,7 @@ const ShopProvider = ({ children }) => {
     // Clear cart when user logs out
     useEffect(() => {
         if (!user) {
-            setCartItems({});
+            setCartItems([]);
         }
     }, [user]);
 
@@ -53,7 +53,7 @@ const ShopProvider = ({ children }) => {
     const userCartData = useCallback(async () => {
         try {
             const res = await axios.get(`${backendUrl}/api/cart/get`, { withCredentials: true });
-            setCartItems(res.data.cartData);
+            setCartItems(Array.isArray(res.data.cartData) ? res.data.cartData : []);
         } catch (error) {
             console.error(error);
             toast.error(error?.response?.data?.message || error.message);
@@ -84,25 +84,35 @@ const ShopProvider = ({ children }) => {
         }
     }, [fetchProducts, fetchTagGroups, user, userCartData]);
 
-    const addToCart = useCallback(async (itemId, size) => {
-        if (!size) {
-            toast.error('Select Product Size');
-            return;
-        }
-
+    const addToCart = useCallback(async (itemId, size = '', color = '') => {
         setCartItems(prev => {
-            const updated = { ...prev };
-            if (!updated[itemId]) updated[itemId] = {};
-            updated[itemId][size] = (updated[itemId][size] || 0) + 1;
+            const updated = [...prev];
+            const existingIndex = updated.findIndex(
+                item => item.productId === itemId && item.size === size && item.color === color
+            );
+
+            if (existingIndex > -1) {
+                updated[existingIndex].quantity += 1;
+            } else {
+                updated.push({
+                    productId: itemId,
+                    size,
+                    color,
+                    quantity: 1
+                });
+            }
             return updated;
         });
         if (user) {
             try {
-                await axios.post(
+                const res = await axios.post(
                     `${backendUrl}/api/cart/add`,
-                    { itemId, size },
+                    { itemId, size, color },
                     { withCredentials: true }
                 );
+                if (res.data.success) {
+                    toast.success(res.data.message);
+                }
             } catch (error) {
                 console.error(error);
                 toast.error(error?.response?.data?.message || error.message);
@@ -113,24 +123,32 @@ const ShopProvider = ({ children }) => {
 
 
     const getCartCount = useCallback(() => {
-        return Object.values(cartItems).reduce(
-            (totalCount, sizes) =>
-                totalCount + Object.values(sizes).reduce((sum, count) => sum + count, 0),
-            0
-        );
+        if (!Array.isArray(cartItems)) return 0;
+        return cartItems.reduce((total, item) => total + item.quantity, 0);
     }, [cartItems]);
 
-    const updateQuantity = useCallback(async (itemId, size, quantity) => {
+    const updateQuantity = useCallback(async (itemId, size, color, quantity) => {
         setCartItems(prev => {
-            const updated = { ...prev };
+            const updated = [...prev];
+            const existingIndex = updated.findIndex(
+                item => item.productId === itemId && item.size === size && item.color === color
+            );
+
             if (quantity === 0) {
-                delete updated[itemId]?.[size];
-                if (updated[itemId] && Object.keys(updated[itemId]).length === 0) {
-                    delete updated[itemId];
+                if (existingIndex > -1) {
+                    updated.splice(existingIndex, 1);
                 }
             } else {
-                if (!updated[itemId]) updated[itemId] = {};
-                updated[itemId][size] = quantity;
+                if (existingIndex > -1) {
+                    updated[existingIndex].quantity = quantity;
+                } else {
+                    updated.push({
+                        productId: itemId,
+                        size,
+                        color,
+                        quantity
+                    });
+                }
             }
             return updated;
         });
@@ -138,7 +156,7 @@ const ShopProvider = ({ children }) => {
             try {
                 await axios.put(
                     `${backendUrl}/api/cart/update`,
-                    { itemId, size, quantity },
+                    { itemId, size, color, quantity },
                     { withCredentials: true }
                 );
             } catch (error) {
@@ -150,14 +168,10 @@ const ShopProvider = ({ children }) => {
 
     const getCartAmount = useCallback(() => {
         let totalAmount = 0;
-        for (const productId in cartItems) {
-            const product = products.find(p => p._id === productId);
-            if (!product) continue;
-            for (const size in cartItems[productId]) {
-                const quantity = cartItems[productId][size];
-                if (quantity) {
-                    totalAmount += product.price * quantity;
-                }
+        for (const item of cartItems) {
+            const product = products.find(p => p._id === item.productId);
+            if (product && item.quantity) {
+                totalAmount += product.price * item.quantity;
             }
         }
         return totalAmount;

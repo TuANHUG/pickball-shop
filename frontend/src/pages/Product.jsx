@@ -11,7 +11,9 @@ function Product() {
     const [productDetails, setProductDetails] = useState(null);
     const [image, setImage] = useState('');
     const [size, setSize] = useState('');
+    const [color, setColor] = useState('');
     const [productSizes, setProductSizes] = useState([]);
+    const [productColors, setProductColors] = useState([]);
 
     useEffect(() => {
         const product = products.find(item => item._id === productId);
@@ -37,9 +39,48 @@ function Product() {
             } else {
                 setProductSizes([]);
             }
+
+            // Get Color tag group
+            const colorTag = tagGroups.find(group => group.name === "Color");
+            
+            if (colorTag && product.tags) {
+                // Get color tag IDs from the Color group
+                const colorTagIds = colorTag.tags.map(tag => tag._id || tag.id);
+                
+                // Find product tags that are in the Color group
+                const productColorTags = product.tags.filter(tag => 
+                    colorTagIds.includes(tag._id || tag.id || tag)
+                );
+                
+                // Extract color names
+                const colors = productColorTags.map(tag => tag.name).filter(Boolean);
+                setProductColors(colors);
+            } else {
+                setProductColors([]);
+            }
         }
     }, [productId, products, tagGroups]);
     
+    const handleAddToCart = () => {
+        // Check if product has size tags and size is not selected
+        if (productSizes.length > 0 && !size) {
+            alert('Vui lòng chọn size');
+            return;
+        }
+        
+        // Check if product has color tags and color is not selected
+        if (productColors.length > 0 && !color) {
+            alert('Vui lòng chọn màu');
+            return;
+        }
+        
+        // Add to cart with appropriate parameters
+        if (productSizes.length > 0 || productColors.length > 0) {
+            addToCart(productDetails._id, size || '', color || '');
+        } else {
+            addToCart(productDetails._id);
+        }
+    };
 
     if (!productDetails) return <div>Loading...</div>;
 
@@ -68,7 +109,7 @@ function Product() {
                 {/* Product Info */}
                 <div className='flex-1'>
                     <h1 className='font-medium text-2xl mt-2'>{productDetails.name}</h1>
-                    <div className='flex gap-1 mt-2 items-center'>
+                    {/* <div className='flex gap-1 mt-2 items-center'>
                         {[...Array(5)].map((_, i) => (
                             <img
                                 key={i}
@@ -78,9 +119,27 @@ function Product() {
                             />
                         ))}
                         <p className='pl-2'>(122)</p>
-                    </div>
+                    </div> */}
                     <p className='mt-5 text-3xl font-medium'>{currency}{productDetails.price}</p>
                     <p className='mt-5 text-gray-500 md:w-4/5'>{productDetails.description}</p>
+
+                    {/* Color Selection - Only show if product has color tags */}
+                    {productColors.length > 0 && (
+                        <div className='flex flex-col gap-4 my-8'>
+                            <p>Select Color</p>
+                            <div className='flex gap-2'>
+                                {productColors.map((item, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => setColor(item)}
+                                        className={`border py-2 px-4 bg-gray-100 cursor-pointer ${item === color ? 'border-orange-500' : 'border-gray-300'}`}
+                                    >
+                                        {item}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Size Selection - Only show if product has size tags */}
                     {productSizes.length > 0 && (
@@ -100,7 +159,7 @@ function Product() {
                         </div>
                     )}
 
-                    <button onClick={() => addToCart(productDetails._id, size)} className='bg-black text-white px-8 py-3 text-sm active:bg-gray-700'>ADD TO CART</button>
+                    <button onClick={handleAddToCart} className='bg-black text-white px-8 py-3 text-sm active:bg-gray-700'>ADD TO CART</button>
 
                     <hr className='mt-8 sm:w-3/4 border-gray-300' />
 

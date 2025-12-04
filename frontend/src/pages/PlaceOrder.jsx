@@ -9,7 +9,6 @@ import { useAuth } from '../context/AuthContext';
 
 function PlaceOrder() {
     const {user} = useAuth();    
-    const [paymentMethod, setPaymentMethod] = useState('cod');
     const [loading, setLoading] = useState(false);
     const {
         products,
@@ -22,14 +21,10 @@ function PlaceOrder() {
     } = useShop();
 
     const [formData, setFormData] = useState({
-        firstName: "",
-        lastName: "",
-        email: "",
-        street: "",
+        name: "",
+        address: "",
+        ward: "",
         city: "",
-        state: "",
-        zipcode: "",
-        country: "",
         phone: ""
     });
 
@@ -44,59 +39,46 @@ function PlaceOrder() {
         try {
             let orderItems = [];
 
-            for (const productId in cartItems) {
-                for (const size in cartItems[productId]) {
-                    const quantity = cartItems[productId][size];
-                    if (quantity > 0) {
-                        const product = products.find(p => p._id === productId);
-                        if (product) {
-                            orderItems.push({
-                                productId: product._id,
-                                name: product.name,
-                                size,
-                                quantity,
-                                price: product.price
-                            });
-                        }
-                    }
+            for (const item of cartItems) {
+                const product = products.find(p => p._id === item.productId);
+                if (product && item.quantity > 0) {
+                    orderItems.push({
+                        productId: product._id,
+                        name: product.name,
+                        size: item.size,
+                        color: item.color,
+                        quantity: item.quantity,
+                        price: product.price
+                    });
                 }
             }
 
             const orderPayload = {
+                name: formData.name,
                 phone: formData.phone,
                 items: orderItems,
                 amount: getCartAmount() + deliveryFee,
                 address: {
-                    street: formData.street,
-                    city: formData.city,
-                    state: formData.state,
-                    zip: formData.zipcode,
-                    country: formData.country
+                    street: formData.address,
+                    ward: formData.ward,
+                    city: formData.city
                 }
             };
 
-            switch (paymentMethod) {
-                case 'cod':
-                    {
-                        const res = await axios.post(`${backendUrl}/api/order/place-cod`, orderPayload, {
-                            withCredentials: true
-                        });
+            const res = await axios.post(`${backendUrl}/api/order/place-cod`, orderPayload, {
+                withCredentials: true
+            });
 
-                        if (res.data.success) {
-                            setCartItems({});
-                            navigate("/orders");
-                            toast.success(res.data.message);
-                        } else {
-                            toast.error(res.data.message || "Order failed.");
-                        }
-                        break;
-                    }
-                default:
-                    toast.error("Please select a valid payment method.");
+            if (res.data.success) {
+                setCartItems([]);
+                navigate("/orders");
+                toast.success(res.data.message);
+            } else {
+                toast.error(res.data.message || "Đặt hàng thất bại");
             }
         } catch (error) {
             console.error(error);
-            toast.error(error.message || "Something went wrong.");
+            toast.error(error?.response?.data?.message || error.message || "Đã có lỗi xảy ra");
         } finally {
             setLoading(false);
         }
@@ -110,24 +92,16 @@ function PlaceOrder() {
             {/* Left Side */}
             <div className='flex flex-col gap-4 w-full sm:max-w-[480px]'>
                 <div className='text-xl sm:text-2xl py-3'>
-                    <Title text1='DELIVERY' text2='INFORMATION' />
+                    <Title text1='THÔNG TIN' text2='GIAO HÀNG' />
                 </div>
-                {/* <div className='flex gap-3'>
-                    <input required name='firstName' value={formData.firstName} onChange={onChangeHandler} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' placeholder='First name' type="text" />
-                    <input required name='lastName' value={formData.lastName} onChange={onChangeHandler} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' placeholder='Last name' type="text" />
-                </div> */}
-                <input required name='name' value={user?.name || ''} readOnly onChange={onChangeHandler} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' placeholder='Name' type="name" />
-                <input required name='email' value={user?.email || ""} readOnly onChange={onChangeHandler} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' placeholder='Email address' type="email" />
-                <input required name='street' value={formData.street} onChange={onChangeHandler} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' placeholder='Street' type="text" />
+                <input required name='name' value={formData.name} onChange={onChangeHandler} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' placeholder='Tên người nhận' type="text" />
+                <input name='email' value={user?.email || ""} readOnly className='border border-gray-300 rounded py-1.5 px-3.5 w-full bg-gray-100' placeholder='Địa chỉ email' type="email" />
+                <input required name='address' value={formData.address} onChange={onChangeHandler} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' placeholder='Địa chỉ' type="text" />
                 <div className='flex gap-3'>
-                    <input required name='city' value={formData.city} onChange={onChangeHandler} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' placeholder='City' type="text" />
-                    <input required name='state' value={formData.state} onChange={onChangeHandler} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' placeholder='State' type="text" />
+                    <input required name='ward' value={formData.ward} onChange={onChangeHandler} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' placeholder='Phường/Xã' type="text" />
+                    <input required name='city' value={formData.city} onChange={onChangeHandler} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' placeholder='Thành phố' type="text" />
                 </div>
-                <div className='flex gap-3'>
-                    <input required name='zipcode' value={formData.zipcode} onChange={onChangeHandler} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' placeholder='Zipcode' type="number" />
-                    <input required name='country' value={formData.country} onChange={onChangeHandler} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' placeholder='Country' type="text" />
-                </div>
-                <input required name='phone' value={formData.phone} onChange={onChangeHandler} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' placeholder='Phone number' type="number" />
+                <input required name='phone' value={formData.phone} onChange={onChangeHandler} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' placeholder='Số điện thoại' type="number" />
             </div>
 
             {/* Right Side */}
@@ -137,23 +111,6 @@ function PlaceOrder() {
                 </div>
 
                 <div className='mt-12'>
-                    <Title text1='PAYMENT' text2='METHOD' />
-                    <div className='flex flex-col gap-3 lg:flex-row'>
-                        <div
-                            onClick={() => toast.warning('Cash on delivery only')}
-                            className='flex items-center gap-3 border border-gray-300 p-2 px-3 cursor-pointer'
-                        >
-                            <p className={`min-w-3.5 h-3.5 border border-gray-300 rounded-full ${paymentMethod === 'stripe' ? 'bg-green-400' : ''}`}></p>
-                            <img className='h-5 mx-4' src={assets.stripe_logo} alt="Stripe Logo" />
-                        </div>
-                        <div
-                            onClick={() => setPaymentMethod('cod')}
-                            className='flex items-center gap-3 border border-gray-300 p-2 px-3 cursor-pointer'
-                        >
-                            <p className={`min-w-3.5 h-3.5 border border-gray-300 rounded-full ${paymentMethod === 'cod' ? 'bg-green-400' : ''}`}></p>
-                            <p className='text-gray-500 text-sm font-medium mx-4'>CASH ON DELIVERY</p>
-                        </div>
-                    </div>
 
                     <div className='w-full text-end mt-8'>
                         <button
@@ -161,7 +118,7 @@ function PlaceOrder() {
                             disabled={loading}
                             className='bg-black text-white px-16 py-3 text-sm cursor-pointer disabled:opacity-50'
                         >
-                            {loading ? "Placing Order..." : "PLACE ORDER"}
+                            {loading ? "Đang đặt hàng..." : "ĐẶT HÀNG"}
                         </button>
                     </div>
                 </div>

@@ -34,7 +34,6 @@ const userLogin = async (req, res) => {
 
         // Issue JWT token
         const token = createToken(user._id);
-        console.log(token);
         // Send via HTTP-only cookie
         res.cookie("user_token", token, {
             httpOnly: true,
