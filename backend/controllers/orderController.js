@@ -52,12 +52,46 @@ const placeOrderCOD = async (req, res) => {
 // All orders data for Admin Panel
 const allOrders = async (req, res) => {
     try {
-        const orders = await Order.find()
-            .sort({ createdAt: -1 })
+        const { page = 1, limit = 10, status, payment, startDate, endDate, sortBy, sortOrder } = req.query;
+
+        const filter = {};
+        if (status) filter.status = status;
+        if (payment !== undefined && payment !== '') filter.payment = payment === 'true';
+        if (startDate || endDate) {
+            filter.createdAt = {};
+            if (startDate) filter.createdAt.$gte = new Date(startDate);
+            if (endDate) {
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+                filter.createdAt.$lte = end;
+            }
+        }
+
+        const sort = {};
+        if (sortBy) {
+            sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+        } else {
+            sort.createdAt = -1;
+        }
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const orders = await Order.find(filter)
+            .sort(sort)
+            .skip(skip)
+            .limit(parseInt(limit))
             .populate("userId", "name email")
             .populate("items.productId", "image name");
 
-        return res.status(200).json({ success: true, orders });
+        const total = await Order.countDocuments(filter);
+
+        return res.status(200).json({ 
+            success: true, 
+            orders,
+            total,
+            page: parseInt(page),
+            totalPages: Math.ceil(total / parseInt(limit))
+        });
     } catch (error) {
         console.error("Error fetching all orders:", error);
         return res.status(500).json({ success: false, message: "Lỗi máy chủ" });
@@ -128,6 +162,28 @@ const orderPayment = async (req, res) => {
         // Validate input
         if (!orderId || typeof payment !== 'boolean') {
             return res.status(400).json({ success: false, message: "ID đơn hàng và trạng thái thanh toán là bắt buộc" });
+        }
+
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
+        }
+
+        // If status changing from false to true, increment sold and decrement quantity
+        if (order.payment === false && payment === true) {
+            for (const item of order.items) {
+                await Product.findByIdAndUpdate(item.productId, { 
+                    $inc: { sold: item.quantity, quantity: -item.quantity } 
+                });
+            }
+        }
+        // If status changing from true to false, decrement sold and increment quantity
+        else if (order.payment === true && payment === false) {
+             for (const item of order.items) {
+                await Product.findByIdAndUpdate(item.productId, { 
+                    $inc: { sold: -item.quantity, quantity: item.quantity } 
+                });
+            }
         }
 
         // Update the order payment status

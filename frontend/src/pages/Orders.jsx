@@ -32,6 +32,17 @@ function Orders() {
         }
     }, [backendUrl]);
 
+    const getStatusText = (status) => {
+        switch(status) {
+            case 'Pending': return 'Chờ xử lý';
+            case 'Processing': return 'Đang đóng gói';
+            case 'Shipped': return 'Đang giao hàng';
+            case 'Delivered': return 'Đã giao hàng';
+            case 'Cancelled': return 'Đã hủy';
+            default: return status;
+        }
+    };
+
     useEffect(() => {
         if (user) {
             loadOrderData();
@@ -66,7 +77,7 @@ function Orders() {
                         <div className='flex justify-between md:w-1/2'>
                             <div className='flex items-center gap-2'>
                                 <p className='min-w-2 h-2 rounded-full bg-green-500'></p>
-                                <p className='text-sm md:text-base'>{product.status}</p>
+                                <p className='text-sm md:text-base'>{getStatusText(product.status)}</p>
                             </div>
 
                         </div>

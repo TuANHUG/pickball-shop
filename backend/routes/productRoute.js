@@ -1,10 +1,13 @@
 import express from 'express';
-import { addProduct, listProducts, removeProduct, singleProduct, editProduct } from '../controllers/productController.js';
+import { addProduct, listProducts, removeProduct, singleProduct, editProduct, listProductAdmin, bulkUpdateDiscount } from '../controllers/productController.js';
 import upload from '../middleware/multer.js';
 import multer from 'multer';
 import { verifyAdmin } from '../middleware/authMiddleware.js';
 
 const productRouter = express.Router();
+
+productRouter.get('/admin-list', verifyAdmin, listProductAdmin);
+productRouter.post('/bulk-discount', verifyAdmin, bulkUpdateDiscount);
 
 productRouter.post(
     '/add', verifyAdmin ,

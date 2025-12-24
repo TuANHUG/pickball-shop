@@ -15,6 +15,9 @@ const Edit = () => {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState("");
+    const [discount, setDiscount] = useState(0);
+    const [quantity, setQuantity] = useState(0);
+    const [status, setStatus] = useState("active");
     const [selectedTags, setSelectedTags] = useState([]);
     const [tagGroups, setTagGroups] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -35,6 +38,9 @@ const Edit = () => {
                 setName(product.name);
                 setDescription(product.description);
                 setPrice(product.price);
+                setDiscount(product.discount || 0);
+                setQuantity(product.quantity || 0);
+                setStatus(product.status || "active");
                 setSelectedTags(product.tags.map(tag => tag._id));
                 setExistingImages(product.image);
             } else {
@@ -103,6 +109,9 @@ const Edit = () => {
             formData.append("name", name);
             formData.append("description", description);
             formData.append("price", price);
+            formData.append("discount", discount);
+            formData.append("quantity", quantity);
+            formData.append("status", status);
             formData.append("tags", JSON.stringify(selectedTags));
 
             // Only append new images that were selected
@@ -205,6 +214,45 @@ const Edit = () => {
                     onChange={(e) => setPrice(e.target.value)}
                     required
                 />
+            </div>
+
+            <div className="flex gap-4 w-full max-w-[500px]">
+                <div className="w-1/2">
+                    <p className="mb-2">Giảm giá (%)</p>
+                    <input
+                        type="number"
+                        className="w-full px-3 py-2"
+                        placeholder="0"
+                        value={discount}
+                        onChange={(e) => setDiscount(e.target.value)}
+                        min="0"
+                        max="100"
+                    />
+                </div>
+                <div className="w-1/2">
+                    <p className="mb-2">Số lượng</p>
+                    <input
+                        type="number"
+                        className="w-full px-3 py-2"
+                        placeholder="0"
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        min="0"
+                        required
+                    />
+                </div>
+            </div>
+
+            <div className="w-full">
+                <p className="mb-2">Trạng thái</p>
+                <select
+                    className="w-full max-w-[500px] px-3 py-2"
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                >
+                    <option value="active">Hoạt động</option>
+                    <option value="inactive">Không hoạt động</option>
+                </select>
             </div>
 
             {loadingTags ? (

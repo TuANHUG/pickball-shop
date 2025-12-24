@@ -6,13 +6,22 @@ import { productSchema } from "../validation/productValidation.js";
 // Function to add product
 const addProduct = async (req, res) => {
   try {
-    const { name, description, price, tags} = req.body;
+    const { name, description, price, discount, quantity, status, tags } =
+      req.body;
 
     // Parse tags if sent as JSON string
     const parsedTags = typeof tags === "string" ? JSON.parse(tags) : tags;
 
     const { error, value } = productSchema.validate(
-      { name, description, price, tags: parsedTags},
+      {
+        name,
+        description,
+        price,
+        discount,
+        quantity,
+        status,
+        tags: parsedTags,
+      },
       { abortEarly: false }
     );
 
@@ -66,6 +75,9 @@ const addProduct = async (req, res) => {
       name: value.name,
       description: value.description,
       price: Number(value.price),
+      discount: Number(value.discount || 0),
+      quantity: Number(value.quantity),
+      status: value.status || "active",
       image: imagesResults,
       tags: value.tags,
     });
@@ -85,7 +97,8 @@ const addProduct = async (req, res) => {
 const editProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, price, tags } = req.body;
+    const { name, description, price, discount, quantity, status, tags } =
+      req.body;
 
     // Validate ID format
     if (!id || id.length !== 24) {
@@ -98,7 +111,15 @@ const editProduct = async (req, res) => {
     const parsedTags = typeof tags === "string" ? JSON.parse(tags) : tags;
 
     const { error, value } = productSchema.validate(
-      { name, description, price, tags: parsedTags },
+      {
+        name,
+        description,
+        price,
+        discount,
+        quantity,
+        status,
+        tags: parsedTags,
+      },
       { abortEarly: false }
     );
 
@@ -168,6 +189,9 @@ const editProduct = async (req, res) => {
     product.name = value.name;
     product.description = value.description;
     product.price = Number(value.price);
+    product.discount = Number(value.discount || 0);
+    product.quantity = Number(value.quantity);
+    product.status = value.status || "active";
     product.image = imagesResults;
     product.tags = value.tags;
 
@@ -197,7 +221,7 @@ const listProducts = async (req, res) => {
     const products = await Product.find(query)
       .sort({ _id: -1 }) // Newest first by ObjectId
       .limit(queryLimit)
-      .select("name price description image tags")
+      .select("name price description image tags discount sold quantity status")
       .populate("tags", "name");
 
     if (!products || products.length === 0) {
@@ -255,9 +279,7 @@ const removeProduct = async (req, res) => {
       })
     );
     await product.deleteOne();
-    res
-      .status(200)
-      .json({ success: true, message: "Xóa sản phẩm thành công" });
+    res.status(200).json({ success: true, message: "Xóa sản phẩm thành công" });
   } catch (error) {
     console.error("Remove Product Error:", error);
     res.status(500).json({
@@ -296,6 +318,100 @@ const singleProduct = async (req, res) => {
   }
 };
 
-// Function to edit product
+// Function for Admin Product List with pagination, filter, sort
+const listProductAdmin = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      status,
+      tag,
+      sort,
+      order,
+    } = req.query;
+    const query = {};
 
-export { addProduct, listProducts, removeProduct, singleProduct, editProduct };
+    if (search) {
+      query.name = { $regex: search, $options: "i" };
+    }
+
+    if (status && status !== "all") {
+      query.status = status;
+    }
+
+    if (tag) {
+      const tagIds = tag.split(",").filter((t) => t);
+      if (tagIds.length > 0) {
+        query.tags = { $all: tagIds };
+      }
+    }
+
+    let sortOptions = { date: -1 };
+    if (sort) {
+      const sortOrder = order === "asc" ? 1 : -1;
+      sortOptions = { [sort]: sortOrder };
+    }
+
+    const products = await Product.find(query)
+      .sort(sortOptions)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .populate("tags", "name");
+
+    const total = await Product.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      products,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    console.error("List Product Admin Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Bulk update discount
+const bulkUpdateDiscount = async (req, res) => {
+  try {
+    const { productIds, discount } = req.body;
+
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Danh sách sản phẩm không hợp lệ" });
+    }
+
+    if (discount < 0 || discount > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Phần trăm giảm giá không hợp lệ (0-100)",
+      });
+    }
+
+    await Product.updateMany(
+      { _id: { $in: productIds } },
+      { $set: { discount: discount } }
+    );
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Cập nhật giảm giá thành công" });
+  } catch (error) {
+    console.error("Error bulk updating discount:", error);
+    return res.status(500).json({ success: false, message: "Lỗi máy chủ" });
+  }
+};
+
+export {
+  addProduct,
+  listProducts,
+  removeProduct,
+  singleProduct,
+  editProduct,
+  listProductAdmin,
+  bulkUpdateDiscount,
+};

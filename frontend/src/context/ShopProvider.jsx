@@ -36,7 +36,8 @@ const ShopProvider = ({ children }) => {
                 }
             });
             if (res.data.success) {
-                setProducts(prev => [...prev, ...res.data.products]);
+                const activeProducts = res.data.products.filter(product => product.status === 'active');
+                setProducts(prev => [...prev, ...activeProducts]);
                 setNextCursor(res.data.nextCursor);
                 setHasMore(res.data.hasMore);
             } else {
