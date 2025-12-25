@@ -26,7 +26,14 @@ function Cart() {
                                     <div className=''>
                                         <p className='text-xs sm:text-lg font-medium'>{productData.name}</p>
                                         <div className='flex items-center gap-5 mt-2'>
-                                            <p>{`${currency} ${productData.price}`}</p>
+                                            {productData.discount > 0 ? (
+                                                <div className='flex items-center gap-2'>
+                                                    <p>{currency}{((productData.price * (100 - productData.discount)) / 100).toLocaleString()}</p>
+                                                    <p className='text-gray-500 line-through text-xs'>{currency}{productData.price.toLocaleString()}</p>
+                                                </div>
+                                            ) : (
+                                                <p>{currency}{productData.price.toLocaleString()}</p>
+                                            )}
                                             {item.size && <p className='px-2 sm:px-3 sm:py-1 border border-gray-300 bg-slate-50'>{item.size}</p>}
                                             {item.color && <p className='px-2 sm:px-3 sm:py-1 border border-gray-300 bg-slate-50'>{item.color}</p>}
                                         </div>

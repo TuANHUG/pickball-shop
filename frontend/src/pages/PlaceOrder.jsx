@@ -8,7 +8,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
 function PlaceOrder() {
-    const {user} = useAuth();    
+    const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const {
         products,
@@ -42,13 +42,17 @@ function PlaceOrder() {
             for (const item of cartItems) {
                 const product = products.find(p => p._id === item.productId);
                 if (product && item.quantity > 0) {
+                    const itemPrice = product.discount > 0
+                        ? (product.price * (100 - product.discount)) / 100
+                        : product.price;
+
                     orderItems.push({
                         productId: product._id,
                         name: product.name,
                         size: item.size,
                         color: item.color,
                         quantity: item.quantity,
-                        price: product.price
+                        price: itemPrice
                     });
                 }
             }
@@ -57,7 +61,7 @@ function PlaceOrder() {
                 name: formData.name,
                 phone: formData.phone,
                 items: orderItems,
-                amount: getCartAmount() + deliveryFee,
+                amount: Number((getCartAmount() + deliveryFee).toFixed(2)),
                 address: {
                     street: formData.address,
                     ward: formData.ward,

@@ -406,6 +406,66 @@ const bulkUpdateDiscount = async (req, res) => {
   }
 };
 
+// Bulk update product quantities
+const updateProductQuantities = async (req, res) => {
+  try {
+    const { items, type } = req.body; // items: [{ product_id, quantity }], type: 'IMPORT' | 'EXPORT'
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Danh sách sản phẩm không hợp lệ" });
+    }
+
+    if (!["IMPORT", "EXPORT"].includes(type)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Loại cập nhật không hợp lệ" });
+    }
+
+    // Check for negative stock if EXPORT
+    if (type === "EXPORT") {
+      const productIds = items.map((i) => i.product_id);
+      const products = await Product.find({ _id: { $in: productIds } });
+
+      for (const item of items) {
+        const product = products.find(
+          (p) => p._id.toString() === item.product_id
+        );
+        if (!product) {
+          return res.status(404).json({
+            success: false,
+            message: `Sản phẩm ID ${item.product_id} không tồn tại`,
+          });
+        }
+        if (product.quantity < item.quantity) {
+          return res.status(400).json({
+            success: false,
+            message: `Sản phẩm ${product.name} không đủ số lượng tồn kho (Hiện tại: ${product.quantity})`,
+          });
+        }
+      }
+    }
+
+    const operations = items.map((item) => {
+      const change = type === "IMPORT" ? Number(item.quantity) : -Number(item.quantity);
+      return {
+        updateOne: {
+          filter: { _id: item.product_id },
+          update: { $inc: { quantity: change } },
+        },
+      };
+    });
+
+    await Product.bulkWrite(operations);
+
+    res.json({ success: true, message: "Cập nhật số lượng thành công" });
+  } catch (error) {
+    console.error("Update quantity error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export {
   addProduct,
   listProducts,
@@ -414,4 +474,5 @@ export {
   editProduct,
   listProductAdmin,
   bulkUpdateDiscount,
+  updateProductQuantities,
 };

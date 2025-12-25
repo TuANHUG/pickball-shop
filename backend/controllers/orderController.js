@@ -105,7 +105,7 @@ const userOrders = async (req, res) => {
 
         // Find orders by user ID, sorted by most recent first
         const orders = await Order.find({ userId })
-            .sort({ createdAt: -1 })
+            .sort({ createdAt: 1 })
             .populate("items.productId", "image");
 
         return res.status(200).json({ success: true, orders });

@@ -7,6 +7,9 @@ import List from "./pages/Product/List";
 import Edit from "./pages/Product/Edit";
 import Tag from "./pages/Tag/Tag";
 import Orders from "./pages/Order/Orders";
+import InventoryList from "./pages/Inventory/List";
+import CreateInventoryLog from "./pages/Inventory/Create";
+import Dashboard from "./pages/Dashboard";
 import { ToastContainer } from 'react-toastify';
 import Login from "./components/Login";
 
@@ -29,11 +32,15 @@ const App = () => {
                 <Sidebar />
                 <div className="w-[70%] mx-auto ml-[max(5vw,25px)] my-8 text-gray-600 text-base">
                   <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/manage-product" element={<List />} />
                     <Route path="/manage-product/add" element={<Add />} />
                     <Route path="/manage-product/edit/:id" element={<Edit />} />
                     <Route path="/orders" element={<Orders />} />
                     <Route path="/tag" element={<Tag />} />
+                    <Route path="/inventory" element={<InventoryList />} />
+                    <Route path="/inventory/create" element={<CreateInventoryLog />} />
                   </Routes>
                 </div>
               </div>

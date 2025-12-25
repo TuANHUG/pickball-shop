@@ -34,10 +34,7 @@ const RelatedProducts = ({ tags, currentProductId }) => {
         {related.map(item => (
           <ProductItem
             key={item._id}
-            id={item._id}
-            name={item.name}
-            price={item.price}
-            image={item.image}
+            product={item}
           />
         ))}
       </div>

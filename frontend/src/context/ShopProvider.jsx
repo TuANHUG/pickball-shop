@@ -172,7 +172,10 @@ const ShopProvider = ({ children }) => {
         for (const item of cartItems) {
             const product = products.find(p => p._id === item.productId);
             if (product && item.quantity) {
-                totalAmount += product.price * item.quantity;
+                const price = product.discount > 0
+                    ? (product.price * (100 - product.discount)) / 100
+                    : product.price;
+                totalAmount += price * item.quantity;
             }
         }
         return totalAmount;

@@ -120,7 +120,14 @@ function Product() {
                         ))}
                         <p className='pl-2'>(122)</p>
                     </div> */}
-                    <p className='mt-5 text-3xl font-medium'>{currency}{productDetails.price}</p>
+                    {productDetails.discount > 0 ? (
+                        <div className='flex items-center gap-3 mt-5'>
+                            <p className='text-3xl font-medium text-red-600'>{currency}{((productDetails.price * (100 - productDetails.discount)) / 100).toLocaleString()}</p>
+                            <p className='text-xl text-gray-500 line-through'>{currency}{productDetails.price.toLocaleString()}</p>
+                        </div>
+                    ) : (
+                        <p className='mt-5 text-3xl font-medium'>{currency}{productDetails.price.toLocaleString()}</p>
+                    )}
                     <p className='mt-5 text-gray-500 md:w-4/5'>{productDetails.description}</p>
 
                     {/* Color Selection - Only show if product has color tags */}

@@ -210,10 +210,7 @@ function Collection() {
                         {filterProducts.map(item => (
                             <ProductItem
                                 key={item._id}
-                                id={item._id}
-                                image={item.image}
-                                name={item.name}
-                                price={item.price}
+                                product={item}
                             />
                         ))}
                     </div>
