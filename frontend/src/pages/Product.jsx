@@ -3,10 +3,11 @@ import { useParams } from 'react-router';
 import { useShop } from '../context/ShopContex';
 import { assets } from '../assets/frontend_assets/assets';
 import RelatedProducts from '../components/RelatedProducts';
+import axios from 'axios';
 
 function Product() {
     const { productId } = useParams();
-    const { products, currency, addToCart, tagGroups } = useShop();
+    const { products, currency, addToCart, tagGroups, backendUrl } = useShop();
 
     const [productDetails, setProductDetails] = useState(null);
     const [image, setImage] = useState('');
@@ -14,12 +15,27 @@ function Product() {
     const [color, setColor] = useState('');
     const [productSizes, setProductSizes] = useState([]);
     const [productColors, setProductColors] = useState([]);
+    const [activeTab, setActiveTab] = useState('description');
+    const [reviews, setReviews] = useState([]);
+    const [previewReviewImage, setPreviewReviewImage] = useState(null);
 
+    const fetchReviews = async () => {
+        try {
+            const res = await axios.get(`${backendUrl}/api/review/${productId}`);
+            if (res.data.success) {
+                setReviews(res.data.reviews);
+            }
+        } catch (error) {
+            console.error("Error fetching reviews:", error);
+        }
+    };
+    
     useEffect(() => {
         const product = products.find(item => item._id === productId);
         if (product) {
             setProductDetails(product);
             setImage(product.image?.[0]);
+            fetchReviews();
 
             // Get Size tag group
             const sizeTag = tagGroups.find(group => group.name === "Size");
@@ -59,7 +75,7 @@ function Product() {
                 setProductColors([]);
             }
         }
-    }, [productId, products, tagGroups]);
+    }, [productId, products, tagGroups, backendUrl]);
     
     const handleAddToCart = () => {
         // Check if product has size tags and size is not selected
@@ -109,17 +125,14 @@ function Product() {
                 {/* Product Info */}
                 <div className='flex-1'>
                     <h1 className='font-medium text-2xl mt-2'>{productDetails.name}</h1>
-                    {/* <div className='flex gap-1 mt-2 items-center'>
-                        {[...Array(5)].map((_, i) => (
-                            <img
-                                key={i}
-                                src={i < 4 ? assets.star_icon : assets.star_dull_icon}
-                                className="w-3.5"
-                                alt={`Star ${i + 1}`}
-                            />
-                        ))}
-                        <p className='pl-2'>(122)</p>
-                    </div> */}
+                    <div className='flex items-center gap-1 mt-2'>
+                        <div className="flex items-center text-yellow-400 text-lg font-medium">
+                            <span>{(productDetails.ratingsAverage || 0).toFixed(1)}</span>
+                            <span className="ml-1">★</span>
+                        </div>
+                        <p className='pl-2 text-gray-500'>({productDetails.ratingsQuantity || 0} đánh giá)</p>
+                    </div>
+
                     {productDetails.discount > 0 ? (
                         <div className='flex items-center gap-3 mt-5'>
                             <p className='text-3xl font-medium text-red-600'>{currency}{((productDetails.price * (100 - productDetails.discount)) / 100).toLocaleString()}</p>
@@ -181,17 +194,89 @@ function Product() {
             {/* Description & Review Section */}
             <div className='mt-20'>
                 <div className='flex'>
-                    <b className='border border-gray-300 px-5 py-3 text-sm'>Description</b>
+                    <b onClick={() => setActiveTab('description')} className={`border border-b-0 border-gray-300 px-5 py-3 text-sm cursor-pointer ${activeTab === 'description' ? 'bg-white' : 'bg-gray-50 text-gray-500'}`}>Description</b>
+                    <b onClick={() => setActiveTab('reviews')} className={`border border-l-0 border-b-0 border-gray-300 px-5 py-3 text-sm cursor-pointer ${activeTab === 'reviews' ? 'bg-white' : 'bg-gray-50 text-gray-500'}`}>Reviews ({productDetails.ratingsQuantity || 0})</b>
                 </div>
                 <div className='border border-gray-300 flex flex-col gap-4 p-6 text-sm text-gray-500'>
-                    <p>{productDetails.description}</p>
+                    {activeTab === 'description' ? (
+                        <p>{productDetails.description}</p>
+                    ) : (
+                        <div className="flex flex-col gap-6">
+                            {reviews.length === 0 ? (
+                                <p>Chưa có đánh giá nào cho sản phẩm này.</p>
+                            ) : (
+                                reviews.map((review, index) => (
+                                    <div key={review._id} className="flex flex-col gap-2 border-b last:border-0 pb-4 last:pb-0 border-gray-100">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center font-bold text-gray-600">
+                                                {review.userId?.name?.charAt(0).toUpperCase() || 'U'}
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-black">{review.userId?.name || 'Người dùng ẩn danh'}</p>
+                                                <div className="flex text-yellow-400 text-xs">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <span key={i}>{i < review.rating ? '★' : '☆'}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <span className="text-xs text-gray-400 ml-auto">{new Date(review.createdAt).toLocaleDateString()}</span>
+                                        </div>
+                                        <p className="text-gray-600">{review.comment}</p>
+                                        
+                                        {/* Images */}
+                                        {review.images && review.images.length > 0 && (
+                                            <div className="flex gap-2 mt-2">
+                                                {review.images.map((img, i) => (
+                                                    <img 
+                                                        key={i} 
+                                                        src={img.url} 
+                                                        alt="Feedback" 
+                                                        onClick={() => setPreviewReviewImage(img.url)}
+                                                        className="w-20 h-20 object-cover rounded border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
+                                        
+                                        {/* Shop Response */}
+                                        {review.reply && review.reply.comment && (
+                                            <div className="bg-gray-50 p-3 rounded mt-2 ml-4 border-l-4 border-gray-300">
+                                                <p className="font-medium text-black text-xs mb-1">Cửa hàng phản hồi:</p>
+                                                <p>{review.reply.comment}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
-
-            {/* Related Products */}
             <RelatedProducts tags={productDetails.tags} currentProductId={productDetails._id} />
+            
+            {/* Image Preview Modal */}
+            {previewReviewImage && (
+                <div 
+                    className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 animate-fade-in"
+                    onClick={() => setPreviewReviewImage(null)}
+                >
+                    <div className="relative max-w-4xl max-h-[90vh]" onClick={e => e.stopPropagation()}>
+                        <img 
+                            src={previewReviewImage} 
+                            alt="Review Preview" 
+                            className="max-w-full max-h-[90vh] object-contain rounded"
+                        />
+                        <button 
+                            className="absolute -top-10 right-0 text-white text-xl font-medium hover:text-gray-300"
+                            onClick={() => setPreviewReviewImage(null)}
+                        >
+                            ✕ Đóng
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
-}
+};
 
 export default Product;

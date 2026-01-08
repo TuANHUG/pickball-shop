@@ -221,7 +221,9 @@ const listProducts = async (req, res) => {
     const products = await Product.find(query)
       .sort({ _id: -1 }) // Newest first by ObjectId
       .limit(queryLimit)
-      .select("name price description image tags discount sold quantity status")
+      .select(
+        "name price description image tags discount sold quantity status ratingsAverage ratingsQuantity"
+      )
       .populate("tags", "name");
 
     if (!products || products.length === 0) {
@@ -448,7 +450,8 @@ const updateProductQuantities = async (req, res) => {
     }
 
     const operations = items.map((item) => {
-      const change = type === "IMPORT" ? Number(item.quantity) : -Number(item.quantity);
+      const change =
+        type === "IMPORT" ? Number(item.quantity) : -Number(item.quantity);
       return {
         updateOne: {
           filter: { _id: item.product_id },

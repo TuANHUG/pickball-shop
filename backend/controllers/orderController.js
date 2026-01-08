@@ -52,9 +52,10 @@ const placeOrderCOD = async (req, res) => {
 // All orders data for Admin Panel
 const allOrders = async (req, res) => {
     try {
-        const { page = 1, limit = 10, status, payment, startDate, endDate, sortBy, sortOrder } = req.query;
+        const { page = 1, limit = 10, status, payment, startDate, endDate, sortBy, sortOrder, userId } = req.query;
 
         const filter = {};
+        if (userId) filter.userId = userId;
         if (status) filter.status = status;
         if (payment !== undefined && payment !== '') filter.payment = payment === 'true';
         if (startDate || endDate) {

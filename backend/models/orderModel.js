@@ -21,6 +21,7 @@ const orderSchema = new mongoose.Schema(
         color: { type: String },
         quantity: { type: Number, required: true },
         price: { type: Number, required: true },
+        isReviewed: { type: Boolean, default: false },
       },
     ],
     amount: { type: Number, required: true },

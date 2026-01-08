@@ -7,6 +7,7 @@ import tagRouter from "./tagRoute.js";
 import tagGroupRouter from "./tagGroupRoute.js";
 import inventoryLogRouter from "./inventoryLogRoute.js";
 import dashboardRouter from "./dashboardRoute.js";
+import reviewRouter from "./reviewRoute.js";
 
 const route = (app) => {
   app.use("/api/user", userRouter);
@@ -18,6 +19,7 @@ const route = (app) => {
   app.use("/api/tag-group", tagGroupRouter);
   app.use("/api/inventory-log", inventoryLogRouter);
   app.use("/api/dashboard", dashboardRouter);
+  app.use("/api/review", reviewRouter);
 };
 
 export default route;

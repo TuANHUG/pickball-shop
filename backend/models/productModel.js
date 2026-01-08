@@ -21,6 +21,8 @@ const productSchema = new mongoose.Schema({
       required: true,
     },
   ],
+  ratingsAverage: { type: Number, default: 0 }, // Sao trung bình (vd: 4.5)
+  ratingsQuantity: { type: Number, default: 0 }, // Tổng số lượt đánh giá
   date: { type: Date, default: Date.now },
 });
 

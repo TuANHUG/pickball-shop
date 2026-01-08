@@ -10,6 +10,7 @@ import Orders from "./pages/Order/Orders";
 import InventoryList from "./pages/Inventory/List";
 import CreateInventoryLog from "./pages/Inventory/Create";
 import Dashboard from "./pages/Dashboard";
+import User from "./pages/User/User";
 import { ToastContainer } from 'react-toastify';
 import Login from "./components/Login";
 
@@ -39,6 +40,7 @@ const App = () => {
                     <Route path="/manage-product/edit/:id" element={<Edit />} />
                     <Route path="/orders" element={<Orders />} />
                     <Route path="/tag" element={<Tag />} />
+                    <Route path="/users" element={<User />} />
                     <Route path="/inventory" element={<InventoryList />} />
                     <Route path="/inventory/create" element={<CreateInventoryLog />} />
                   </Routes>

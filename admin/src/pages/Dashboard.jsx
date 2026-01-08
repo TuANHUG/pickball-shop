@@ -16,19 +16,21 @@ const Dashboard = () => {
     });
     const currency = "$"; // Default currency
 
-    useEffect(() => {
-        // Default to last 7 days
+    const setDateRange = (days) => {
         const today = new Date();
-        const lastWeek = new Date(today);
-        lastWeek.setDate(today.getDate() - 6);
+        const pastDate = new Date(today);
+        pastDate.setDate(today.getDate() - (days - 1));
 
-        // Adjust for timezone offset to ensure correct date string
         const offset = today.getTimezoneOffset();
-        const lastWeekLocal = new Date(lastWeek.getTime() - (offset * 60 * 1000));
+        const pastDateLocal = new Date(pastDate.getTime() - (offset * 60 * 1000));
         const todayLocal = new Date(today.getTime() - (offset * 60 * 1000));
 
-        setStartDate(lastWeekLocal.toISOString().split('T')[0]);
+        setStartDate(pastDateLocal.toISOString().split('T')[0]);
         setEndDate(todayLocal.toISOString().split('T')[0]);
+    };
+
+    useEffect(() => {
+        setDateRange(7);
     }, []);
 
     const fetchStats = async () => {
@@ -69,31 +71,38 @@ const Dashboard = () => {
             <h3 className='text-2xl font-bold mb-4'>Dashboard</h3>
 
             {/* Date Filter */}
-            <div className='flex gap-4 mb-8 items-end bg-white p-4 rounded shadow-sm'>
-                <div>
-                    <label className='block text-sm font-medium text-gray-700'>Start Date</label>
-                    <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className='mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2'
-                    />
+            <div className='flex flex-col xl:flex-row gap-4 mb-8 items-start xl:items-end bg-white p-4 rounded shadow-sm'>
+                <div className='flex gap-2'>
+                    <button onClick={() => setDateRange(7)} className='px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 transition-colors'>7 Days</button>
+                    <button onClick={() => setDateRange(30)} className='px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 transition-colors'>30 Days</button>
+                    <button onClick={() => setDateRange(90)} className='px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 transition-colors'>3 Months</button>
                 </div>
-                <div>
-                    <label className='block text-sm font-medium text-gray-700'>End Date</label>
-                    <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className='mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2'
-                    />
+                <div className='flex gap-4 items-end flex-wrap'>
+                    <div>
+                        <label className='block text-sm font-medium text-gray-700'>Start Date</label>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className='mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2'
+                        />
+                    </div>
+                    <div>
+                        <label className='block text-sm font-medium text-gray-700'>End Date</label>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className='mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2'
+                        />
+                    </div>
+                    <button
+                        onClick={fetchStats}
+                        className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700'
+                    >
+                        Filter
+                    </button>
                 </div>
-                <button
-                    onClick={fetchStats}
-                    className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700'
-                >
-                    Filter
-                </button>
             </div>
 
             {/* Summary Cards */}

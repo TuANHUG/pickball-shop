@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useLocation } from 'react-router';
 
 const Orders = () => {
     const currency = "$";
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const location = useLocation();
+    const queryParams = new URLSearchParams(location.search);
+    const userIdFromUrl = queryParams.get("userId");
     
     // Filter & Pagination State
     const [page, setPage] = useState(1);
@@ -17,6 +21,8 @@ const Orders = () => {
     const [endDate, setEndDate] = useState("");
     const [sortBy, setSortBy] = useState("createdAt");
     const [sortOrder, setSortOrder] = useState("desc");
+     const [userId, setUserId] = useState(userIdFromUrl || "");
+
 
     // Fetch all orders for admin
     const fetchAllOrders = async () => {
@@ -30,7 +36,8 @@ const Orders = () => {
                 startDate,
                 endDate,
                 sortBy,
-                sortOrder
+                sortOrder,
+                userId: userId
             };
             
             const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/order/list`, {
@@ -53,7 +60,12 @@ const Orders = () => {
 
     useEffect(() => {
         fetchAllOrders();
-    }, [page, statusFilter, paymentFilter, startDate, endDate, sortBy, sortOrder]);
+    }, [page, statusFilter, paymentFilter, startDate, endDate, sortBy, sortOrder, userId]);
+
+    useEffect(() => {
+        setUserId(userIdFromUrl || "");
+    }, [userIdFromUrl]);
+
 
     // Handle sort
     const handleSort = (field) => {
