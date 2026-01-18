@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import { useShop } from '../context/ShopContex';
-import { assets } from '../assets/frontend_assets/assets';
 import RelatedProducts from '../components/RelatedProducts';
 import axios from 'axios';
 
@@ -23,13 +22,13 @@ function Product() {
         try {
             const res = await axios.get(`${backendUrl}/api/review/${productId}`);
             if (res.data.success) {
-                setReviews(res.data.reviews);
+                setReviews(res.data.reviews.filter(item => !item.hidden));
             }
         } catch (error) {
             console.error("Error fetching reviews:", error);
         }
     };
-    
+
     useEffect(() => {
         const product = products.find(item => item._id === productId);
         if (product) {
@@ -37,38 +36,30 @@ function Product() {
             setImage(product.image?.[0]);
             fetchReviews();
 
-            // Get Size tag group
             const sizeTag = tagGroups.find(group => group.name === "Size");
-            
+
             if (sizeTag && product.tags) {
-                // Get size tag IDs from the Size group
                 const sizeTagIds = sizeTag.tags.map(tag => tag._id || tag.id);
-                
-                // Find product tags that are in the Size group
-                const productSizeTags = product.tags.filter(tag => 
+
+                const productSizeTags = product.tags.filter(tag =>
                     sizeTagIds.includes(tag._id || tag.id || tag)
                 );
-                
-                // Extract size names
+
                 const sizes = productSizeTags.map(tag => tag.name).filter(Boolean);
                 setProductSizes(sizes);
             } else {
                 setProductSizes([]);
             }
 
-            // Get Color tag group
             const colorTag = tagGroups.find(group => group.name === "Color");
-            
+
             if (colorTag && product.tags) {
-                // Get color tag IDs from the Color group
                 const colorTagIds = colorTag.tags.map(tag => tag._id || tag.id);
-                
-                // Find product tags that are in the Color group
-                const productColorTags = product.tags.filter(tag => 
+
+                const productColorTags = product.tags.filter(tag =>
                     colorTagIds.includes(tag._id || tag.id || tag)
                 );
-                
-                // Extract color names
+
                 const colors = productColorTags.map(tag => tag.name).filter(Boolean);
                 setProductColors(colors);
             } else {
@@ -76,21 +67,18 @@ function Product() {
             }
         }
     }, [productId, products, tagGroups, backendUrl]);
-    
+
     const handleAddToCart = () => {
-        // Check if product has size tags and size is not selected
         if (productSizes.length > 0 && !size) {
             alert('Vui lòng chọn size');
             return;
         }
-        
-        // Check if product has color tags and color is not selected
+
         if (productColors.length > 0 && !color) {
             alert('Vui lòng chọn màu');
             return;
         }
-        
-        // Add to cart with appropriate parameters
+
         if (productSizes.length > 0 || productColors.length > 0) {
             addToCart(productDetails._id, size || '', color || '');
         } else {
@@ -102,9 +90,7 @@ function Product() {
 
     return (
         <div className='border-t-2 border-gray-300 pt-10 transition-opacity ease-in duration-500 opacity-100'>
-            {/* Product Main Section */}
             <div className='flex gap-12 sm:gap-12 flex-col sm:flex-row'>
-                {/* Product Images */}
                 <div className='flex-1 flex flex-col-reverse gap-3 sm:flex-row'>
                     <div className='flex sm:flex-col overflow-x-auto sm:overflow-y-scroll justify-between sm:justify-normal sm:w-[18.7%] w-full'>
                         {productDetails.image.map((img) => (
@@ -121,8 +107,6 @@ function Product() {
                         <img src={image.url} alt="Selected product" className='w-full h-auto' />
                     </div>
                 </div>
-
-                {/* Product Info */}
                 <div className='flex-1'>
                     <h1 className='font-medium text-2xl mt-2'>{productDetails.name}</h1>
                     <div className='flex items-center gap-1 mt-2'>
@@ -143,7 +127,6 @@ function Product() {
                     )}
                     <p className='mt-5 text-gray-500 md:w-4/5'>{productDetails.description}</p>
 
-                    {/* Color Selection - Only show if product has color tags */}
                     {productColors.length > 0 && (
                         <div className='flex flex-col gap-4 my-8'>
                             <p>Select Color</p>
@@ -161,7 +144,6 @@ function Product() {
                         </div>
                     )}
 
-                    {/* Size Selection - Only show if product has size tags */}
                     {productSizes.length > 0 && (
                         <div className='flex flex-col gap-4 my-8'>
                             <p>Select Size</p>
@@ -191,7 +173,6 @@ function Product() {
                 </div>
             </div>
 
-            {/* Description & Review Section */}
             <div className='mt-20'>
                 <div className='flex'>
                     <b onClick={() => setActiveTab('description')} className={`border border-b-0 border-gray-300 px-5 py-3 text-sm cursor-pointer ${activeTab === 'description' ? 'bg-white' : 'bg-gray-50 text-gray-500'}`}>Description</b>
@@ -219,30 +200,37 @@ function Product() {
                                                     ))}
                                                 </div>
                                             </div>
-                                            <span className="text-xs text-gray-400 ml-auto">{new Date(review.createdAt).toLocaleDateString()}</span>
+                                            <span className="text-xs text-gray-400 ml-auto">
+                                                {new Date(review.createdAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                            </span>
                                         </div>
                                         <p className="text-gray-600">{review.comment}</p>
-                                        
-                                        {/* Images */}
+
                                         {review.images && review.images.length > 0 && (
                                             <div className="flex gap-2 mt-2">
                                                 {review.images.map((img, i) => (
-                                                    <img 
-                                                        key={i} 
-                                                        src={img.url} 
-                                                        alt="Feedback" 
+                                                    <img
+                                                        key={i}
+                                                        src={img.url}
+                                                        alt="Feedback"
                                                         onClick={() => setPreviewReviewImage(img.url)}
                                                         className="w-20 h-20 object-cover rounded border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
                                                     />
                                                 ))}
                                             </div>
                                         )}
-                                        
-                                        {/* Shop Response */}
+
                                         {review.reply && review.reply.comment && (
                                             <div className="bg-gray-50 p-3 rounded mt-2 ml-4 border-l-4 border-gray-300">
-                                                <p className="font-medium text-black text-xs mb-1">Cửa hàng phản hồi:</p>
-                                                <p>{review.reply.comment}</p>
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <p className="font-medium text-black text-xs">Cửa hàng phản hồi:</p>
+                                                    {review.reply.createdAt && (
+                                                        <span className="text-xs text-gray-400">
+                                                            {new Date(review.reply.createdAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-sm text-gray-700">{review.reply.comment}</p>
                                             </div>
                                         )}
                                     </div>
@@ -253,20 +241,19 @@ function Product() {
                 </div>
             </div>
             <RelatedProducts tags={productDetails.tags} currentProductId={productDetails._id} />
-            
-            {/* Image Preview Modal */}
+
             {previewReviewImage && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 animate-fade-in"
                     onClick={() => setPreviewReviewImage(null)}
                 >
                     <div className="relative max-w-4xl max-h-[90vh]" onClick={e => e.stopPropagation()}>
-                        <img 
-                            src={previewReviewImage} 
-                            alt="Review Preview" 
+                        <img
+                            src={previewReviewImage}
+                            alt="Review Preview"
                             className="max-w-full max-h-[90vh] object-contain rounded"
                         />
-                        <button 
+                        <button
                             className="absolute -top-10 right-0 text-white text-xl font-medium hover:text-gray-300"
                             onClick={() => setPreviewReviewImage(null)}
                         >

@@ -307,7 +307,7 @@ const List = () => {
 
             {/* Table */}
             <div className="flex flex-col gap-2">
-                <div className={`hidden md:grid ${isSelectionMode ? 'grid-cols-[40px_1fr_2fr_3fr_1fr_1fr_1fr_1fr_1fr_1fr]' : 'grid-cols-[1fr_2fr_3fr_1fr_1fr_1fr_1fr_1fr_1fr]'} items-center py-2 px-2 border border-gray-200 bg-gray-100 text-sm font-bold`}>
+                <div className={`hidden md:grid ${isSelectionMode ? 'grid-cols-[40px_1fr_2fr_3fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]' : 'grid-cols-[1fr_2fr_3fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]'} items-center py-2 px-2 border border-gray-200 bg-gray-100 text-sm font-bold`}>
                     {isSelectionMode && (
                         <div className="flex justify-center">
                             <input 
@@ -335,6 +335,9 @@ const List = () => {
                     <div className="cursor-pointer hover:text-blue-600" onClick={() => handleSort('quantity')}>
                         Số lượng <SortIcon field="quantity" />
                     </div>
+                    <div className="cursor-pointer hover:text-blue-600" onClick={() => handleSort('ratingsAverage')}>
+                        Đánh giá <SortIcon field="ratingsAverage" />
+                    </div>
                     <div>Trạng thái</div>
                     <div className="text-center">Thao tác</div>
                 </div>
@@ -347,7 +350,7 @@ const List = () => {
                     products.map((product) => (
                         <div
                             key={product._id}
-                            className={`grid ${isSelectionMode ? 'grid-cols-[40px_1fr_2fr_3fr_1fr_1fr_1fr_1fr_1fr_1fr]' : 'grid-cols-[1fr_2fr_3fr_1fr_1fr_1fr_1fr_1fr_1fr]'} items-center gap-2 py-2 px-2 border border-gray-200 text-sm hover:bg-gray-50 ${selectedProducts.includes(product._id) ? 'bg-blue-50' : ''}`}
+                            className={`grid ${isSelectionMode ? 'grid-cols-[40px_1fr_2fr_3fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]' : 'grid-cols-[1fr_2fr_3fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]'} items-center gap-2 py-2 px-2 border border-gray-200 text-sm hover:bg-gray-50 ${selectedProducts.includes(product._id) ? 'bg-blue-50' : ''}`}
                             onClick={() => isSelectionMode && handleSelectProduct(product._id)}
                         >
                             {isSelectionMode && (
@@ -380,6 +383,17 @@ const List = () => {
                             <p>{product.discount}%</p>
                             <p>{product.sold}</p>
                             <p>{product.quantity}</p>
+                            <p 
+                                className="flex items-center text-amber-500 font-medium cursor-pointer hover:bg-amber-50 px-1 rounded transition w-fit"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/review/${product._id}`);
+                                }}
+                                title="Xem chi tiết đánh giá"
+                            >
+                                {(product.ratingsAverage || 0).toFixed(1)} <span className="mx-1">★</span> 
+                                <span className="text-gray-500 text-xs text-blue-600 underline decoration-blue-600/30">({product.ratingsQuantity || 0})</span>
+                            </p>
                             <p className={`font-medium ${product.status === "active" ? "text-green-600" : "text-red-600"}`}>
                                 {product.status === "active" ? "Hoạt động" : "Dừng"}
                             </p>

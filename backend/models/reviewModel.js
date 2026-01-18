@@ -24,9 +24,10 @@ const reviewSchema = new mongoose.Schema(
       max: 5,
     },
     comment: { type: String, required: true },
+    hidden: { type: Boolean, default: false },
     reply: {
-      comment: { type: String }, // Nội dung shop trả lời
-      createdAt: { type: Date }, // Ngày shop trả lời
+      comment: { type: String }, 
+      createdAt: { type: Date }, 
     },
     images: [
       {

@@ -5,6 +5,7 @@ import Sidebar from "./components/Sidebar";
 import Add from "./pages/Product/Add";
 import List from "./pages/Product/List";
 import Edit from "./pages/Product/Edit";
+import Review from "./pages/Product/Review";
 import Tag from "./pages/Tag/Tag";
 import Orders from "./pages/Order/Orders";
 import InventoryList from "./pages/Inventory/List";
@@ -38,6 +39,7 @@ const App = () => {
                     <Route path="/manage-product" element={<List />} />
                     <Route path="/manage-product/add" element={<Add />} />
                     <Route path="/manage-product/edit/:id" element={<Edit />} />
+                    <Route path="/review/:productId" element={<Review />} />
                     <Route path="/orders" element={<Orders />} />
                     <Route path="/tag" element={<Tag />} />
                     <Route path="/users" element={<User />} />
